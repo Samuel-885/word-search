@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Ranking Caça-Palavras</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin-bottom: 20px;
+      color: #00e676;
+    }
+
+    table {
+      width: 80%;
+      margin: 0 auto;
+      border-collapse: collapse;
+      font-size: 24px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #444;
+    }
+
+    th {
+      background-color: #333;
+    }
+
+    tr:nth-child(even) {
+      background-color: #2a2a2a;
+    }
+
+    tr:nth-child(1) td {
+      font-weight: bold;
+      color: #ffd54f;
+    }
+    
+  </style>
+</head>
+<body>
+
+  <h1>🏆 Ranking - Caça-Palavras TráfeGO Pago</h1>
+
+  <table id="ranking-table">
+    <tr><th>Posição</th><th>Nome</th><th>Palavras</th><th>Tempo</th></tr>
+  </table>
+
+  
+
+  <script>
+  const endpoint = "https://sheetdb.io/api/v1/6hjmqksmlsype";
+
+  function formatarTempo(segundos) {
+    const m = Math.floor(segundos / 60).toString().padStart(2, '0');
+    const s = (segundos % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  function carregarRanking() {
+    fetch(endpoint)
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(item => {
+          // Converte Score
+          item.Score = parseInt(item.Score) || 0;
+
+          // Converte tempo MM:SS para segundos
+          if (item.Time && item.Time.includes(":")) {
+            const partes = item.Time.split(":");
+            const minutos = parseInt(partes[0]) || 0;
+            const segundos = parseInt(partes[1]) || 0;
+            item.Time = (minutos * 60) + segundos;
+          } else {
+            item.Time = parseInt(item.Time) || 9999;
+          }
+        });
+
+        // Ordena: Score DESC, Time ASC
+        data.sort((a, b) => {
+          if (b.Score !== a.Score) return b.Score - a.Score;
+          return a.Time - b.Time;
+        });
+
+        let html = `
+          <tr><th>🏆 Posição</th><th>👤 Nome</th><th>✅ Palavras</th><th>⏱️ Tempo</th></tr>
+        `;
+
+        data.forEach((item, index) => {
+          const tempoExibido = item.Time === 9999 ? '-' : formatarTempo(item.Time);
+          html += `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${item.Name}</td>
+              <td>${item.Score}</td>
+              <td>${tempoExibido}</td>
+            </tr>
+          `;
+        });
+
+        document.getElementById('ranking-table').innerHTML = html;
+      })
+      .catch(err => {
+        console.error("Erro ao carregar ranking:", err);
+      });
+  }
+
+  carregarRanking();
+  // setInterval(carregarRanking, 1000);
+</script>
+
+
+
+
+</body>
+</html>
